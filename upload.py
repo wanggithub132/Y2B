@@ -155,7 +155,7 @@ def upload_video(video_file, cover_file, _config, detail):
                 "cover": cover_file,  # 视频封面
                 "title": title,
                 "desc_format_id": 0,
-                "desc": "定期分享running man制作不易求赞求三连,",
+                "desc": "人类迷惑行为大赏,记录生活中的美好时刻，为大家带来欢笑，看到生活中的美好",
                 "dolby": 0,  # 杜比音效
                 "dynamic": "",
                 "subtitle": {
