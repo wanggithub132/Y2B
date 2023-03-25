@@ -149,7 +149,7 @@ def upload_video(video_file, cover_file, _config, detail):
         "limit": 3,
         "streamers": {
             video_file: {
-                "copyright": 2,
+                "copyright": 1,
                 "source": detail['origin'],
                 "tid": _config['tid'],  # 投稿分区
                 "cover": cover_file,  # 视频封面
