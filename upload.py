@@ -21,6 +21,16 @@ PROXY = {
 }
 
 
+# 去除所有表情
+def clean(desstr, restr=''):
+    # 过滤表情
+    try:
+        co = re.compile(u'['u'\U0001F300-\U0001F64F' u'\U0001F680-\U0001F6FF'u'\u2600-\u2B55]+')
+    except re.error:
+        co = re.compile(u'('u'\ud83c[\udf00-\udfff]|'u'\ud83d[\udc00-\ude4f\ude80-\udeff]|'u'[\u2600-\u2B55])+')
+    return co.sub(restr, desstr)
+
+
 def get_gist(_gid, token):
     """通过 gist id 获取已上传数据"""
     rsp = requests.get(
@@ -82,11 +92,16 @@ def get_video_list(channel_id: str):
     res = xmltodict.parse(res)
     ret = []
     for elem in res.get("feed", {}).get("entry", []):
+        no_emoji_title = clean(elem.get("title"))  # 去除表情
+        str_list = no_emoji_title.split("#")  # 分割标签
+        title = str_list[0]
+        del str_list[0]
         ret.append({
             "vid": elem.get("yt:videoId"),
-            "title": elem.get("title"),
+            "title": title,
             "origin": "https://www.youtube.com/watch?v=" + elem["yt:videoId"],
             "cover_url": elem["media:group"]["media:thumbnail"]["@url"],
+            "tag": str_list,
             # "desc": elem["media:group"]["media:description"],
         })
     return ret
@@ -108,9 +123,12 @@ def get_all_video(_config):
     for i in _config:
         res = get_video_list(i["channel_id"])
         for j in res:
+            temp_i = i.copy()  # 拷贝
+            for tag in j["tag"]:
+                temp_i["tags"] = temp_i["tags"] + "," + tag.strip()  # 增加新标签 去除空格
             ret.append({
                 "detail": j,
-                "config": i
+                "config": temp_i
             })
     return ret
 
