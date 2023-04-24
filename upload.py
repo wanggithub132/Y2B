@@ -1,4 +1,5 @@
 import json
+import math
 import os
 import re
 import subprocess
@@ -158,7 +159,7 @@ def download_cover(url, out):
         tmp.write(res)
 
 
-def upload_video(video_file, cover_file, _config, detail):
+def upload_video(video_file, cover_file, _config, detail, count):
     title = detail['title']
     if len(title) > 80:
         title = title[:80]
@@ -180,6 +181,7 @@ def upload_video(video_file, cover_file, _config, detail):
                     "open": 0,
                     "lan": ""
                 },
+                "dtime": get_delay_time(count),  # 延时分享
                 "tag": _config['tags'],
                 "open_subtitle": False,
             }
@@ -210,7 +212,15 @@ def upload_video(video_file, cover_file, _config, detail):
     return json.loads(data)
 
 
-def process_one(detail, config):
+def get_delay_time(count):
+    hour = 1 * 60 * 60
+    day = 24 * hour
+    delay_time = day * count
+    time_temp = math.floor(time.time() - 3 * hour + delay_time)
+    return time_temp
+
+
+def process_one(detail, config, count):
     logging.info(f'开始：{detail["vid"]}')
     format = ["webm", "flv", "mp4"]
     v_ext = None
@@ -224,7 +234,7 @@ def process_one(detail, config):
         return False
     download_cover(detail["cover_url"], detail["vid"] + ".jpg")
     ret = upload_video(detail["vid"] + f".{v_ext}",
-                       detail["vid"] + ".jpg", config, detail)
+                       detail["vid"] + ".jpg", config, detail, count)
     os.remove(detail["vid"] + f".{v_ext}")
     os.remove(detail["vid"] + ".jpg")
     return ret
@@ -236,8 +246,10 @@ def upload_process(gist_id, token):
         tmp.write(json.dumps(cookie))
     need_to_process = get_all_video(config)
     need = select_not_uploaded(need_to_process, uploaded)
+    count = 0
     for i in need:
-        ret = process_one(i["detail"], i["config"])
+        count = count + 1
+        ret = process_one(i["detail"], i["config"], count)
         if ret is None:
             continue
         i["ret"] = ret
